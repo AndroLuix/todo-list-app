@@ -1,117 +1,107 @@
 import React, { Component } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableHighlight , FlatList} from 'react-native';
+import { todoStyle } from './styles/todoStyles';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
+import { View, TextInput, TouchableOpacity, FlatList, Alert, Text, StyleSheet } from 'react-native';
 
 export default class App extends Component {
+
   state = {
     text: '',
     todoList: [],
   }
-  
 
   onChangeTextHandler = (text) => {
-    this.setState({ text: text })  // Modifica qui
+    this.setState({ text: text });
   }
 
   addTodoHandler = () => {
     if (this.state.text.trim() === "") {
-      return alert("Inserisci del testo")
+      return Alert.alert("Inserisci del testo", 'OK', [{ text: 'OK' }]);
     }
     this.setState(prevState => {
       return {
-        todoList: prevState.todoList.concat(prevState.text),
-        text: ''  // Aggiungi questa riga per azzerare il valore dopo l'aggiunta 
+        todoList: [...prevState.todoList, prevState.text],
+        text: ''
       }
-    })
+    
+    });
   }
 
-  render() {
-    // Creo una lista per le attività
-    const list = this.state.todoList.map((todo, index) => {
-      return <Text key={index} style={styles.listBoxText}>{todo}</Text>  // Aggiungi una chiave unica (in questo caso, index)
-    })
+  /**
+   * Elimina attività
+    
+   */
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.todoList !== this.state.todoList) {
+      this.flatListRef?.scrollToOffset({ animated: true, offset: 0 });
+    }
+  }
 
+  deleteActivityMessage = (index) => {
+    return Alert.alert(
+      "Elimina", "Sicuro di voler eliminare l'Attività",
+      [
+        {
+          text: "Sì", onPress: () => {
+            const updatedState = this.removeActivity(index);
+            this.setState(updatedState);
+          }
+        },
+        { text: "No", onPress: () => console.warn("Attività NON eliminata") }
+      ]
+    );
+  };
+
+  removeActivity = (index) => {
+    const updatedList = [...this.state.todoList];
+    updatedList.splice(index, 1);
+    console.warn('Attività cancellata');
+    return { todoList: updatedList };
+  }
+
+  
+
+  render() {
     return (
       <View>
-        <View style={styles.container}>
+        <View style={todoStyle.container}>
           <TextInput
-            style={styles.Input}
+            style={todoStyle.Input}
             placeholder='Scrivi le Attività'
             onChangeText={this.onChangeTextHandler}
             value={this.state.text}
           />
           <TouchableOpacity
-            style={styles.buttonContainer}
+            style={todoStyle.buttonContainer}
             onPress={this.addTodoHandler}>
-            <View style={styles.Invia}>
-              <Text style={styles.buttonText}>Invia</Text>
+            <View style={todoStyle.Invia}>
+              <Text style={todoStyle.buttonText}>Invia</Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        <FlatList data={this.state.todoList}
-         renderItem={({item}) =>(
-           <TouchableOpacity activeOpacity={0.5} onPress={()=>{}}>
-          <View style={styles.listBox}>
-            <Text style={styles.listBoxText}> {item}</Text>
-          </View>
-        </TouchableOpacity>
-
-        )}> </FlatList>
-       
-       
-        <StatusBar style="auto" />
+        <FlatList
+          data={this.state.todoList}
+          renderItem={({ item, index }) => (
+            <View style={todoStyle.listBoxContainer}>
+              <TouchableOpacity activeOpacity={0.5} onPress={() => { }}>
+                <View style={todoStyle.listBox}>
+                  <Text style={todoStyle.listBoxText}> {item}</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.5}
+                onPress={() => this.deleteActivityMessage(index)}>
+                <View style={todoStyle.trashIcon}>
+                  <FontAwesomeIcon icon={faTrash} />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
       </View>
     );
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 50,
-    marginTop: 50,
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  Input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    width: '80%',
-    marginTop: 20,
-    margin: 10,
-    padding: 10,
-  },
-  buttonContainer: {
-    height: 50,
-  },
-  Invia: {
-    height: 50,
-    backgroundColor: 'dodgerblue',
-    padding: 15,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginTop: 4,
-  },
-  buttonText: {
-    color: 'white',
-    textAlign: 'center',
-  },
-  listBox: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-  
-  },
-  listBoxText: {
-    color: 'white',
-    fontSize: 20,
-    marginVertical: 10,
-   
-    backgroundColor: `rgba(4,120,87,1)`,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    width: '90%',
-
-  }
-});
+const styles = StyleSheet.create({});
